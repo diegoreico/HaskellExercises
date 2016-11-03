@@ -63,3 +63,43 @@ prop_rango xs x y = ( (length xs) >= 1 && x >= 0 && y >= 0 && x < y) ==> (rango 
 Desde ghci compruebe la propiedad invocando
 quickCheck prop_rango
 -}
+
+{-
+7. En teoría de números, los factores primos de un número entero son los números
+primos divisores exactos de ese número entero. El proceso de búsqueda de esos
+divisores se denomina factorización de enteros, o factorización en números primos.
+Defina una función que obtenga la lista de factores primos de un número entero. Para
+ello, primero defina una función que obtenga todos los divisores del número, a
+continuación otra función que determine si un número es primo o no (usando la función
+de los divisores), y por último defina la función de los factores primos usando las dos
+funciones anteriores.
+-}
+
+obtenerDivisores :: Int -> [Int]
+obtenerDivisores x = [ y | y <- [1..x], mod x y == 0 ]
+
+isPrime :: Int -> Bool
+isPrime x = length (obtenerDivisores x) == 2
+
+factoresPrimos :: Int -> [Int]
+factoresPrimos x = filter isPrime (obtenerDivisores x)
+
+{-
+8. Definir una función que dada una lista de entrada obtenga una nueva lista en la que
+cada elemento de la original aparece repetido tantas veces como indica su posición. Por
+ejemplo, para la lista de entrada [2,4,6] se genera la lista [2,4,4,6,6,6]; o para la cadena
+de entrada “hola” se obtiene la cadena “hoolllaaaa”. Use listas definidas de forma
+intensiva.
+-}
+
+repetirPosicion :: [Int] -> [Int]
+repetirPosicion [] = []
+repetirPosicion xs = concat [ replicate x y | (x,y) <- zip [1..] xs]
+
+{-
+Definir intensionalmente una función que dado un entero calcule una lista
+con todas las triplas (x,y,z) de números entre 1 y n tales que x²+ y²= z²
+-}
+
+arq :: Int -> [(Int,Int,Int)]
+arq n = [ (x,y,z) | x <- [0..n], y <- [0..n], z <- [0..n], (x^2)+(y^2) == (z^2)]
