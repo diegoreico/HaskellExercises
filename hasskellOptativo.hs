@@ -1,5 +1,6 @@
-{--import Data.List (sortBy)
+import Data.List
 
+{--
 skyline :: (Integral a) => [(a,a,a)] -> [(a,a,a)]
 skyline xs = sortBy compare xs
 --}
@@ -22,6 +23,14 @@ type Silueta = [Coordenada]
 —- de resolver las dos sublistas separadamente.
 --}
 {--resuelve :: --}
+
+resuelve :: [Edificio] -> Silueta
+resuelve xs
+ | length xs == 1 = siluetaedificio (head xs)
+ | otherwise = une (resuelve (fst (split xs))) (resuelve (snd (split xs)))
+
+split :: [a] -> ([a], [a])
+split myList = splitAt (((length myList) + 1) `div` 2) myList
 
 {--
 -- Función siluetadeedificio, que transforma un único Edificio en su Silueta correspondiente 
@@ -56,20 +65,41 @@ filtrarLista xs y:ys
  | 
  | 
 -}
+
+une :: Silueta -> Silueta -> Silueta
+une xs ys = filtrarYRepetidas (filtrarXRepetidas (sort ( xs ++ ys ++ (filtrarElemento xs ys) ++ (filtrarElemento ys xs))))
+
+filtrarXRepetidas :: [Coordenada] -> [Coordenada]
+filtrarXRepetidas (x:xs)
+ | length xs > 1 && fst x == fst (head xs) = filtrarXRepetidas xs
+ | length xs > 1 && fst x /= fst (head xs) = x : filtrarXRepetidas xs
+ | fst x == fst (head xs) = xs 
+ | fst x /= fst (head xs) = x : xs
+
+filtrarXRepetidas' :: [Coordenada] -> [Coordenada]
+filtrarXRepetidas' (x:xs)
+ | length xs > 1 && fst x == fst (head xs) = filtrarXRepetidas' ( x : tail xs)
+ | length xs > 1 && fst x /= fst (head xs) = x : filtrarXRepetidas' xs
+ | fst x == fst (head xs) = [x] 
+ | fst x /= fst (head xs) = x : xs
+
+filtrarYRepetidas :: [Coordenada] -> [Coordenada]
+filtrarYRepetidas (x:xs)
+ | length xs > 1 && snd x == snd (head xs) = filtrarYRepetidas ( x : tail xs)
+ | length xs > 1 && snd x /= snd (head xs) = x : filtrarYRepetidas xs
+ | snd x == snd (head xs) = [x]
+ | snd x /= snd (head xs) = x : xs
+
+filtrarElemento :: Silueta -> [Coordenada] -> Silueta
+filtrarElemento xs (y:ys)
+ | length ys > 1 = filtrarElem xs (y : [head ys]) ++ filtrarElemento xs ys
+ | otherwise = filtrarElem xs (y : [head ys])
+
 filtrarElem :: Silueta -> [Coordenada] -> Silueta
+filtrarElem xs [] = xs
+filtrarElem [] _ = []
 filtrarElem xs [(a1, a2), (b1, b2)] = [(x, y) | (x, y) <- xs, x >= a1, x < b1, y >= a2] ++ [(x, a2) | (x, y) <- xs, x >= a1, x < b1, y < a2]
 
-filtrarElem' (x, xs) = filtrarElem x xs 
-
-pillarPares :: [Coordenada] -> [[Coordenada]]
-pillarPares (x:xs)
- | length xs > 1 = [[x,(head xs)]] ++ (pillarPares xs)
- | otherwise = [[x, (head xs)]]
-
-{-- 
-zip (replicate 100 (1,2)) (pillarPares  [(0,2),(3,3),(5,1),(6,0)])
-
- --}
 
 {--
 
@@ -94,3 +124,40 @@ zs' = eliminar(ordenador(zs))
 —- Finalmente, en la altura cero se visualiza una línea de guiones para indicar el suelo.
 --}
 
+rango :: Coordenada -> Coordenada -> [Coordenada]
+rango (x1,y1) (x2,y2) = [(x,y1) | x <- [x1..x2]]
+
+
+generarLista' :: [Coordenada] -> [Coordenada]
+generarLista' (x:xs)
+ | length xs > 1 = rango x (head xs) ++ generarLista' xs
+ | otherwise = rango x (head xs)
+
+generarLista :: [Coordenada] -> [Coordenada]
+generarLista xs = filtrarXRepetidas (generarLista' xs)
+
+calcularMaximo :: [Coordenada] -> Int
+calcularMaximo xs = maximum [ snd x |x <- xs ]
+
+
+imprimir' :: [Coordenada] -> Int -> [Char]
+imprimir' xs y
+ | y > 0 = ['\n',' '] ++ parser (map (mayorIgualQue y) (map snd xs)) ++ imprimir' xs (y-1) 
+ | y == 0 = ['\n',' '] ++ replicate (length xs) '-' ++ ['\n']
+
+imprimir :: [Coordenada] -> IO ()
+imprimir xs = putStr (imprimir' xs (calcularMaximo xs))
+
+
+parser :: [Bool] -> [Char]
+parser xs
+ | length xs > 1 && head xs == True = ['*'] ++ parser (tail xs)
+ | length xs > 1 && head xs == False = [' '] ++ parser (tail xs)
+ | length xs == 1 && head xs == True = ['*']
+ | length xs == 1 && head xs == False = [' ']
+
+mayorIgualQue :: Int -> Int -> Bool
+mayorIgualQue x y = y>=x
+
+ejercicioResuelto :: [Edificio] -> IO()
+ejercicioResuelto xs = imprimir (generarLista (resuelve xs))
